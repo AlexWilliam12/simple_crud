@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listagem de Carros</title>
+</head>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f4f4f4;
+        color: #333;
+    }
+
+    h1 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    main {
+        width: 90%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    div {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    button {
+        padding: 10px;
+        margin-top: 10px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        width: calc(100% - 20px);
+        padding: 8px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    input[type="text"]:disabled,
+    input[type="number"]:disabled {
+        background-color: #f2f2f2;
+        cursor: not-allowed;
+    }
+
+    input[type="text"]:disabled::placeholder,
+    input[type="number"]:disabled::placeholder {
+        color: #999;
+    }
+
+    .controll {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+    }
+</style>
+
+<body onload="listar()">
+    <h1>CRUD de Carros</h1>
+    <main>
+
+        <div>
+            <h2>Listar Carros</h2>
+            <table border="1" id="carrosList">
+                <thead>
+                    <th>ID</th>
+                    <th>Modelo</th>
+                    <th>Fabricante</th>
+                    <th>Ano de lançamento</th>
+                </thead>
+                <tbody>
+                    <tr>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="controll">
+            <div>
+                <h2>Adicionar Carro</h2>
+                <input type="text" id="modelo" placeholder="Modelo" required><br>
+                <input type="text" id="fabricante" placeholder="Fabricante" required><br>
+                <input type="number" id="anoLancamento" placeholder="Ano de Lançamento" required><br>
+                <button onclick="adicionar()">Adicionar Carro</button>
+            </div>
+
+            <div>
+                <h2>Atualizar Carro</h2>
+                <input type="number" id="idAtualizar" placeholder="ID do Carro" required min="1" oninput="procurar()"><br>
+                <input type="text" id="novoModelo" placeholder="Novo Modelo" required disabled><br>
+                <input type="text" id="novoFabricante" placeholder="Novo Fabricante" required disabled><br>
+                <input type="number" id="novoAnoLancamento" placeholder="Novo Ano de Lançamento" required disabled><br>
+                <button onclick="atualizar()">Atualizar Carro</button>
+            </div>
+
+            <div>
+                <h2>Excluir Carro</h2>
+                <input type="number" id="idExcluir" placeholder="ID do Carro" required><br>
+                <button onclick="excluir()">Excluir Carro</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const baseURL = 'http://localhost:8080/carros';
+        const regex = /"([^"]+)"/;
+
+        async function listar() {
+            const response = await fetch(baseURL);
+            if (response.ok) {
+                const carros = await response.json();
+                const carrosList = document.getElementById('carrosList');
+                const tbody = carrosList.getElementsByTagName('tbody')[0];
+
+                tbody.innerHTML = '';
+
+                carros.forEach(carro => {
+                    const row = tbody.insertRow();
+                    const id = row.insertCell();
+                    id.textContent = carro.id;
+                    const modelo = row.insertCell();
+                    modelo.textContent = carro.modelo;
+                    const fabricante = row.insertCell();
+                    fabricante.textContent = carro.fabricante;
+                    const anoLancamento = row.insertCell();
+                    anoLancamento.textContent = carro.anoLancamento;
+                });
+            } else {
+                const error = await response.json();
+                console.error(error);
+            }
+        }
+
+
+        async function procurar() {
+
+            const novoModelo = document.getElementById('novoModelo');
+            const novoFabricante = document.getElementById('novoFabricante');
+            const novoAnoLancamento = document.getElementById('novoAnoLancamento');
+
+            const id = document.getElementById('idAtualizar').value;
+            const response = await fetch(`${baseURL}/${id}`)
+            const body = await response.json();
+            if (!response.ok) {
+                novoModelo.setAttribute('disabled', true);
+                novoModelo.value = '';
+                novoFabricante.setAttribute('disabled', true);
+                novoFabricante.value = '';
+                novoAnoLancamento.setAttribute('disabled', true);
+                novoAnoLancamento.value = '';
+            } else {
+                novoModelo.removeAttribute('disabled');
+                novoModelo.value = body.modelo;
+                novoFabricante.removeAttribute('disabled');
+                novoFabricante.value = body.fabricante;
+                novoAnoLancamento.removeAttribute('disabled');
+                novoAnoLancamento.value = body.anoLancamento;
+            }
+        }
+
+        async function adicionar() {
+            const modelo = document.getElementById('modelo').value;
+            const fabricante = document.getElementById('fabricante').value;
+            const anoLancamento = document.getElementById('anoLancamento').value;
+
+            const carro = {
+                modelo: modelo,
+                fabricante: fabricante,
+                anoLancamento: parseInt(anoLancamento)
+            };
+
+            await fetch(baseURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(carro)
+            })
+                .then(async response => {
+                    alert('Carro adicionado com sucesso');
+                    await listar();
+                })
+                .catch(error => alert('Erro ao adicionar carro: ' + error.error.match(regex)[1]));
+        }
+
+        async function atualizar() {
+            const id = document.getElementById('idAtualizar').value;
+            const novoModelo = document.getElementById('novoModelo').value;
+            const novoFabricante = document.getElementById('novoFabricante').value;
+            const novoAnoLancamento = document.getElementById('novoAnoLancamento').value;
+
+            const carro = {
+                modelo: novoModelo,
+                fabricante: novoFabricante,
+                anoLancamento: parseInt(novoAnoLancamento)
+            };
+
+            await fetch(`${baseURL}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(carro)
+            })
+                .then(async response => {
+                    alert('Carro atualizado com sucesso');
+                    await listar();
+                })
+                .catch(error => alert('Erro ao atualizar carro: ' + error.error.match(regex)[1]));
+        }
+
+        async function excluir() {
+            const id = document.getElementById('idExcluir').value;
+            const response = await fetch(`${baseURL}/${id}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                const body = await response.json();
+                alert('Erro ao excluir o carro: ' + body.error.match(regex)[1]);
+            } else {
+                alert('Carro excluído com sucesso');
+                await listar();
+            }
+        }
+    </script>
+</body>
+
+</html>
